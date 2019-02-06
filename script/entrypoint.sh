@@ -2,9 +2,9 @@
 
 TRY_LOOP="20"
 
-: "${REDIS_HOST:="redis"}"
-: "${REDIS_PORT:="6379"}"
-: "${REDIS_PASSWORD:=""}"
+: "${RABBITMQ_HOST:="amqp"}"
+: "${RABBITMQ_PORT:="5672"}"
+: "${RABBITMQ_PASSWORD:=""}"
 
 : "${POSTGRES_HOST:="postgres"}"
 : "${POSTGRES_PORT:="5432"}"
@@ -36,10 +36,10 @@ if [ -e "/requirements.txt" ]; then
     $(which pip) install --user -r /requirements.txt
 fi
 
-if [ -n "$REDIS_PASSWORD" ]; then
-    REDIS_PREFIX=:${REDIS_PASSWORD}@
+if [ -n "$RABBITMQ_PASSWORD" ]; then
+    RABBITMQ_PREFIX=:${RABBITMQ_PASSWORD}@
 else
-    REDIS_PREFIX=
+    RABBITMQ_PREFIX=
 fi
 
 wait_for_port() {
@@ -63,8 +63,9 @@ if [ "$AIRFLOW__CORE__EXECUTOR" != "SequentialExecutor" ]; then
 fi
 
 if [ "$AIRFLOW__CORE__EXECUTOR" = "CeleryExecutor" ]; then
-  AIRFLOW__CELERY__BROKER_URL="redis://$REDIS_PREFIX$REDIS_HOST:$REDIS_PORT/1"
-  wait_for_port "Redis" "$REDIS_HOST" "$REDIS_PORT"
+  AIRFLOW__CELERY__BROKER_URL="amqp://$REDIS_PREFIX$RABBITMQ_HOST:$RABBITMQ_PORT/1"
+  wait_for_port "Rabbitmq" "$RABBITMQ_HOST" "$RABBITMQ_PORT"
+  # wait_for_port "Redis" "$RABBITMQ_HOST" "$RABBITMQ_PORT"
 fi
 
 case "$1" in
